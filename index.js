@@ -19,11 +19,7 @@
       this.cookies = {};
       this.ph = false;
 
-      //this.autoRetryLogin = true;
       this.phantomPort = 12300; // default phantom port
-      //this.API = {}; // Plug constants
-      //this.debug.plugbotapi = this;
-      //this.screenshots = false;
     };
 
     DubtrackAPI.prototype.connect = function(room) {
@@ -36,14 +32,7 @@
           _this.connect(room);
         });
       } else {
-        //if(this.loggedin === false && this.cookies.amplitude_id == undefined) {
-        //  this.login(this.creds, function () {
-        //    _this.openPage(room);
-        //  });
-        //} else {
-          this.openPage(room);
-        //}
-
+        this.openPage(room);
       }
     };
 
@@ -114,22 +103,6 @@
                   }
                 }, 5000);
 
-                /*
-                $('li.imgEl').bind('DOMSubtreeModified', function(e) {
-                  console.log("detected song change");
-                  var $img = $(this).find(' img');
-                  var username = $img.attr('alt');
-
-                  console.log("1");
-                  var info = $(this).find('li.infoContainer span.currentSong').html();
-                  var foo = info.split(" - ");
-                  var artist = foo[0];
-                  var track = foo[1];
-
-                  console.log(username + " just started playing " + track + " by " + artist);
-                });
-                */
-
                 // emit chat events
                 $('ul.chat-main').arrive('li', function() {
                   if(currentChat !== $(this).find('.text')) {
@@ -167,10 +140,7 @@
 
 
                 return true;
-              }, function(msg) {
-                console.log("done");
-                page.render("first.png");
-                console.log("rendered");
+              }, function() {
               });
             }, 3000);
 
@@ -180,9 +150,7 @@
               }
               var re = new RegExp("^DubtrackAPI: (.+)");
               if(msg.match(re)) {
-                //console.log("got console message: ", msg);
                 var obj = JSON.parse(RegExp.$1);
-                //console.log("obj: ", obj);
                 _this.emit(obj.event, obj);
               }
             });
@@ -201,7 +169,6 @@
         port: _this.phantomPort,
         'ignore-ssl-errors': 'yes'
       };
-//      phantomOptions.path = '/home/chris/cmb/exp/';
       phantom.create("--ssl-protocol=TLSv1", phantomOptions, function(ph) {
         ph.get('version', function(result) {
           if(result.major < 2) {

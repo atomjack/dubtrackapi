@@ -2,6 +2,8 @@ An API for creating bots on Dubtrack.fm.
 
 This API is just beginning, and since Dubtrack has no Javascript API, features are very limited.
 
+`phantomjs` and `phantomjs-node` are required. Right now, the API requires phantomjs version 2.0 or greater. Version 1.x hasn't been tested. Please let me know if you get it to work with 1.x.
+
 First, you must log in to Dubtrack with the account you want the bot to login as. View the cookies in your browser and get the value of the "connect.sid" cookie. It will look something like `s%Bp46VM86r0gns4w2krwtQ86JiROoNorcapnylGMTdG9qvs3rfs9YOCacdhFl2MlRCr4e8uM8LuP905RP`.
 
 ```
