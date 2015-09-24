@@ -4,7 +4,7 @@ This API is just beginning, and since Dubtrack has no Javascript API, features a
 
 First, you must log in to Dubtrack with the account you want the bot to login as. View the cookies in your browser and get the value of the "connect.sid" cookie. It will look something like `s%Bp46VM86r0gns4w2krwtQ86JiROoNorcapnylGMTdG9qvs3rfs9YOCacdhFl2MlRCr4e8uM8LuP905RP`.
 
-`
+```
 var DubtrackAPI = require('./dubtrackapi');
 var creds = '...';
 
@@ -24,4 +24,4 @@ bot.on('chat', function(data) {
 bot.on('djAdvance', function(data) {
   console.log("new song playing: ", data);
 });
-`
+```
