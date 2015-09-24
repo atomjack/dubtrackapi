@@ -6,7 +6,7 @@ First, you must log in to Dubtrack with the account you want the bot to login as
 
 ```
 var DubtrackAPI = require('./dubtrackapi');
-var creds = '...';
+var creds = '...'; // Put the value of the connect.sid cookie here
 
 var bot = new DubtrackAPI(creds);
 
