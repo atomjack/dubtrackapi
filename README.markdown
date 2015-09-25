@@ -16,7 +16,7 @@ bot.connect('chillout-mixer'); // specify the room name part of the url for the 
 
 bot.on('ready', function(data) {
   console.log("Ready to go: ", data);
-  // data contains the currentDJ (by name) and currentTrack (artist and track)
+  // data contains the currentDJ (by name) and currentTrack (artist and track), and the list of users in the room (does not update on join/depart)
 });
 
 bot.on('chat', function(data) {
