@@ -19,17 +19,24 @@
       this.cookies = {};
       this.ph = false;
 
+      this.userLevels = {
+        USER: 0,
+        MOD: 1,
+        CREATOR: 2,
+        ADMIN: 3
+      };
+
       this.phantomPort = 12300; // default phantom port
     };
 
     DubtrackAPI.prototype.connect = function(room) {
       console.log("connecting to " + room);
-      var _this = this;
+      var self = this;
       if(this.ph === false) {
         // Need to create page
         this.createPage(room, function(ph) {
-          _this.ph = ph;
-          _this.connect(room);
+          self.ph = ph;
+          self.connect(room);
         });
       } else {
         this.openPage(room);
@@ -46,13 +53,12 @@
     };
 
     DubtrackAPI.prototype.openPage = function(room) {
-      var _this = this;
-
+      var self = this;
 
 
       this.ph.createPage(function (page) {
 
-        _this.ph.addCookie('connect.sid', _this.creds, '.dubtrack.fm');
+        self.ph.addCookie('connect.sid', self.creds, '.dubtrack.fm');
 
         page.set('onError', function(msg, trace) {
           console.log("Page Error: ,", msg);
@@ -60,31 +66,40 @@
         });
         console.log("opening page");
 
-        setTimeout(function() {
-          page.render("foo.png");
-          console.log("rendered");
-        }, 8000);
-
         page.open('https://www.dubtrack.fm/join/' + room, function(status) {
-          _this.page = page;
+          self.page = page;
 
           console.log("status: ", status);
           page.includeJs('https://raw.githubusercontent.com/uzairfarooq/arrive/master/src/arrive.js', function() {
             setTimeout(function() {
-              page.evaluate(function(obj) {
-                var currentTrack = $('li.infoContainer span.currentSong').html();
-
+              page.evaluate(function(data) {
                 var currentChat = false;
 
+                var currentTrack = $('li.infoContainer span.currentSong').html();
                 var username = $('li.imgEl img').attr('alt');
-                var foo = currentTrack.split(" - ");
+                var currentDJ = currentTrack.split(" - ");
+                var users = {};
+                $('ul.avatar-list li').each(function() {
+                  var user = {};
+                  user.username = $(this).find('img').attr('alt');
+                  if($(this).hasClass('admin'))
+                    user.level = data.userLevels.CREATOR;
+                  else if($(this).hasClass('creator'))
+                    user.level = data.userLevels.CREATOR;
+                  else if($(this).hasClass('mod'))
+                    user.level = data.userLevels.MOD;
+                  else
+                    user.level = data.userLevels.USER;
+                  users[user.username] = user;
+                });
                 console.log("DubtrackAPI: " + JSON.stringify({
                   event: 'ready',
                   currentDJ: username,
                   currentTrack: {
-                    artist: foo[0],
-                    track: foo[1]
-                  }
+                    artist: currentDJ[0],
+                    track: currentDJ[1]
+                  },
+                  users: users
                 }));
 
                 setInterval(function() {
@@ -119,28 +134,28 @@
                         text: text
                       }));
                     });
-                  } else {
-
                   }
 
-
-
                   var text = $(this).find('.text p').html();
-                  text = text.replace(/<a.* class="username">([^<]+):<\/a> /, '');
-                  var username = RegExp.$1;
-                  var obj = {
-                    event: 'chat',
-                    username: username,
-                    text: text
-                  };
-                  var output = "DubtrackAPI: " + JSON.stringify(obj);
-                  console.log(output);
+                  if(typeof text === 'object') {
+                    text = text.replace(/<a.* class="username">([^<]+):<\/a> /, '');
+                    var username = RegExp.$1;
+                    var obj = {
+                      event: 'chat',
+                      username: username,
+                      text: text
+                    };
+                    var output = "DubtrackAPI: " + JSON.stringify(obj);
+                    console.log(output);
+                  }
                 });
 
 
 
                 return true;
               }, function() {
+              }, {
+                userLevels: self.userLevels
               });
             }, 3000);
 
@@ -151,7 +166,7 @@
               var re = new RegExp("^DubtrackAPI: (.+)");
               if(msg.match(re)) {
                 var obj = JSON.parse(RegExp.$1);
-                _this.emit(obj.event, obj);
+                self.emit(obj.event, obj);
               }
             });
 
@@ -164,9 +179,9 @@
     };
 
     DubtrackAPI.prototype.createPage = function(room, callback) {
-      var _this = this;
+      var self = this;
       var phantomOptions = {
-        port: _this.phantomPort,
+        port: self.phantomPort,
         'ignore-ssl-errors': 'yes'
       };
       phantom.create("--ssl-protocol=TLSv1", phantomOptions, function(ph) {
