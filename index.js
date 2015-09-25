@@ -19,7 +19,7 @@
       this.cookies = {};
       this.ph = false;
 
-      this.userLevels = {
+      this.userPermissions = {
         USER: 0,
         MOD: 1,
         CREATOR: 2,
@@ -83,13 +83,13 @@
                   var user = {};
                   user.username = $(this).find('img').attr('alt');
                   if($(this).hasClass('admin'))
-                    user.level = data.userLevels.CREATOR;
+                    user.permission = data.userPermissions.CREATOR;
                   else if($(this).hasClass('creator'))
-                    user.level = data.userLevels.CREATOR;
+                    user.permission = data.userPermissions.CREATOR;
                   else if($(this).hasClass('mod'))
-                    user.level = data.userLevels.MOD;
+                    user.permission = data.userPermissions.MOD;
                   else
-                    user.level = data.userLevels.USER;
+                    user.permission = data.userPermissions.USER;
                   users[user.username] = user;
                 });
                 console.log("DubtrackAPI: " + JSON.stringify({
@@ -137,7 +137,7 @@
                   }
 
                   var text = $(this).find('.text p').html();
-                  if(typeof text === 'object') {
+                  if(typeof text === 'string') {
                     text = text.replace(/<a.* class="username">([^<]+):<\/a> /, '');
                     var username = RegExp.$1;
                     var obj = {
@@ -155,7 +155,7 @@
                 return true;
               }, function() {
               }, {
-                userLevels: self.userLevels
+                userPermissions: self.userPermissions
               });
             }, 3000);
 
