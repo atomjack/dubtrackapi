@@ -1,6 +1,6 @@
 An API for creating bots on Dubtrack.fm.
 
-This API is just beginning, and since Dubtrack has no Javascript API, features are very limited.
+This API is just beginning, and since the Dubtrack Javascript API is not documented yet, features are somewhat limited.
 
 `phantomjs` and `phantomjs-node` are required. Right now, the API requires phantomjs version 2.0 or greater. Version 1.x hasn't been tested. Please let me know if you get it to work with 1.x.
 
@@ -19,11 +19,15 @@ bot.on('ready', function(data) {
   // data contains the currentDJ (by name) and currentTrack (artist and track), and the list of users in the room (does not update on join/depart)
 });
 
-bot.on('chat', function(data) {
+bot.on('chat-message', function(data) {
   console.log("got chat: ", data);
 });
 
 bot.on('djAdvance', function(data) {
   console.log("new song playing: ", data);
+});
+
+bot.getEvents(function(events) {
+  console.log("These are the Dubtrack events I respond to: ", events);
 });
 ```
