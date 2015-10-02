@@ -1,10 +1,19 @@
-An API for creating bots on Dubtrack.fm.
+A node.js API for creating bots on Dubtrack.fm.
 
 This API is just beginning, and since the Dubtrack Javascript API is not documented yet, features are somewhat limited.
 
 `phantomjs` and `phantomjs-node` are required. Right now, the API requires phantomjs version 2.0 or greater. Version 1.x hasn't been tested. Please let me know if you get it to work with 1.x.
 
+```
+npm install phantomjs
+```
+
 First, you must log in to Dubtrack with the account you want the bot to login as. View the cookies in your browser and get the value of the "connect.sid" cookie. It will look something like `s%Bp46VM86r0gns4w2krwtQ86JiROoNorcapnylGMTdG9qvs3rfs9YOCacdhFl2MlRCr4e8uM8LuP905RP`.
+
+Then, create a .js file similar to below, and run it with node:
+```
+node bot.js
+```
 
 ```
 var DubtrackAPI = require('./dubtrackapi');
@@ -17,6 +26,10 @@ bot.connect('chillout-mixer'); // specify the room name part of the url for the 
 bot.on('ready', function(data) {
   console.log("Ready to go: ", data);
   // data contains the currentDJ (by name) and currentTrack (artist and track), and the list of users in the room (does not update on join/depart)
+  
+  bot.getEvents(function(events) {
+    console.log("These are the Dubtrack events I respond to: ", events);
+  });
 });
 
 bot.on('chat-message', function(data) {
@@ -25,9 +38,5 @@ bot.on('chat-message', function(data) {
 
 bot.on('djAdvance', function(data) {
   console.log("new song playing: ", data);
-});
-
-bot.getEvents(function(events) {
-  console.log("These are the Dubtrack events I respond to: ", events);
 });
 ```
