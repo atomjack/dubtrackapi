@@ -58,12 +58,19 @@
 
       this.ph.createPage(function (page) {
 
-        self.ph.addCookie('connect.sid', self.creds, '.dubtrack.fm');
-
+        var cookie = {
+          domain: '.dubtrack.fm',
+          name: 'connect.sid',
+          value: self.creds
+        };
+        //self.ph.addCookie('connect.sid', self.creds, '.dubtrack.fm');
+        self.ph.addCookie(cookie);
+        /*
         page.set('onError', function(msg, trace) {
           console.log("Page Error: ,", msg);
           console.log("Error Trace: ", trace);
         });
+        */
         console.log("opening page");
 
         page.open('https://www.dubtrack.fm/join/' + room, function(status) {
@@ -112,7 +119,6 @@
                       artist: currentDJ[0],
                       track: currentDJ[1]
                     },
-                    //usersMessages: usersMessages,
                     users: users
                   }
                 }));
@@ -199,7 +205,7 @@
 
         if(typeof callback == 'function')
           callback(ph);
-      });
+        });
     };
 
     DubtrackAPI.prototype.getEvents = function(callback) {

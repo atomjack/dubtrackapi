@@ -16,7 +16,7 @@
     "node": "*"
   },
   "dependencies" : {
-    "phantom": "*",
+    "phantom": "0.8.0",
     "net": "*"
   },
   "devDependencies": {},
