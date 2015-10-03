@@ -57,129 +57,121 @@
 
 
       this.ph.createPage(function (page) {
-
+        page.set('viewportSize', {
+          width: 1280,
+          height: 720
+        });
         var cookie = {
           domain: '.dubtrack.fm',
           name: 'connect.sid',
           value: self.creds
         };
-        //self.ph.addCookie('connect.sid', self.creds, '.dubtrack.fm');
         self.ph.addCookie(cookie);
-        /*
         page.set('onError', function(msg, trace) {
           console.log("Page Error: ,", msg);
           console.log("Error Trace: ", trace);
         });
-        */
         console.log("opening page");
 
         page.open('https://www.dubtrack.fm/join/' + room, function(status) {
           self.page = page;
 
           console.log("status: ", status);
-          page.includeJs('https://raw.githubusercontent.com/uzairfarooq/arrive/master/src/arrive.js', function() {
-            setTimeout(function() {
-              page.evaluate(function(data) {
-                function debug(msg) {
-                  console.log("DubtrackAPI: " + JSON.stringify({
-                    event: 'debug',
-                    data: msg
-                  }));
-                }
-
-
-
-
-
-                var currentChat = false;
-
-                var currentTrack = $('li.infoContainer span.currentSong').html();
-                var username = $('li.imgEl img').attr('alt');
-                var currentDJ = currentTrack.split(" - ");
-                var users = {};
-                $('ul.avatar-list li').each(function() {
-                  var user = {};
-                  user.username = $(this).find('img').attr('alt');
-                  if($(this).hasClass('admin'))
-                    user.permission = data.userPermissions.CREATOR;
-                  else if($(this).hasClass('creator'))
-                    user.permission = data.userPermissions.CREATOR;
-                  else if($(this).hasClass('mod'))
-                    user.permission = data.userPermissions.MOD;
-                  else
-                    user.permission = data.userPermissions.USER;
-                  users[user.username] = user;
-                });
-
+          setTimeout(function() {
+            page.evaluate(function(data) {
+              function debug(msg) {
                 console.log("DubtrackAPI: " + JSON.stringify({
-                  event: 'ready',
-                  data: {
-                    currentDJ: username,
-                    currentTrack: {
-                      artist: currentDJ[0],
-                      track: currentDJ[1]
-                    },
-                    users: users
-                  }
+                  event: 'debug',
+                  data: msg
                 }));
+              }
 
-                // Monitor the current song playing, and emit an event when it changes
-                setInterval(function() {
-                  var newTrack = $('li.infoContainer span.currentSong').html();
-                  if(newTrack !== currentTrack) {
-                    currentTrack = newTrack;
-                    var username = $('li.imgEl img').attr('alt');
-                    var foo = currentTrack.split(" - ");
-                    var obj = {
-                      event: 'djAdvance',
-                      data: {
-                        username: username,
-                        artist: foo[0],
-                        track: foo[1]
-                      }
-                    };
-                    console.log("DubtrackAPI: " + JSON.stringify(obj));
-                  }
-                }, 5000);
-
-                //Emit all Dubtrack JS API events
-                var events = [];
-                for(var event in Dubtrack.Events._events) {
-                  if(!event.match(/user[-_]update[_-]/)) {
-                    events.push(event);
-                  }
-                }
-                debug("events: " + JSON.stringify(events));
-
-                events.forEach(function(event) {
-                  debug("binding event for " + event.replace("realtime:", ""));
-                  Dubtrack.Events.bind(event, function (data) {
-                    console.log("DubtrackAPI: " + JSON.stringify({
-                      event: event.replace("realtime:", ""),
-                      data: data
-                    }));
-                  });
-                });
-
-              }, function() {
-
-              }, {
-                userPermissions: self.userPermissions
+              var currentTrack = $('li.infoContainer span.currentSong').html();
+              var username = $('li.imgEl img').attr('alt');
+              var currentDJ = currentTrack.split(" - ");
+              var users = {};
+              $('ul.avatar-list li').each(function() {
+                var user = {};
+                user.username = $(this).find('img').attr('alt');
+                if($(this).hasClass('admin'))
+                  user.permission = data.userPermissions.CREATOR;
+                else if($(this).hasClass('creator'))
+                  user.permission = data.userPermissions.CREATOR;
+                else if($(this).hasClass('mod'))
+                  user.permission = data.userPermissions.MOD;
+                else
+                  user.permission = data.userPermissions.USER;
+                users[user.username] = user;
               });
-            }, 3000);
 
-            page.set('onConsoleMessage', function(msg) {
-              if(!msg.match(/^The page at/)) {
-                //console.log("console message: ", msg);
+              console.log("DubtrackAPI: " + JSON.stringify({
+                event: 'ready',
+                data: {
+                  currentDJ: username,
+                  currentTrack: {
+                    artist: currentDJ[0],
+                    track: currentDJ[1]
+                  },
+                  users: users
+                }
+              }));
+
+              // Monitor the current song playing, and emit an event when it changes
+              setInterval(function() {
+                var newTrack = $('li.infoContainer span.currentSong').html();
+                if(newTrack !== currentTrack) {
+                  currentTrack = newTrack;
+                  var username = $('li.imgEl img').attr('alt');
+                  var foo = currentTrack.split(" - ");
+                  var obj = {
+                    event: 'djAdvance',
+                    data: {
+                      username: username,
+                      artist: foo[0],
+                      track: foo[1]
+                    }
+                  };
+                  console.log("DubtrackAPI: " + JSON.stringify(obj));
+                }
+              }, 5000);
+
+              //Emit all Dubtrack JS API events
+              var events = [];
+              for(var event in Dubtrack.Events._events) {
+                if(!event.match(/user[-_]update[_-]/)) {
+                  events.push(event);
+                }
               }
-              var re = new RegExp("^DubtrackAPI: (.+)");
-              if(msg.match(re)) {
-                var obj = JSON.parse(RegExp.$1);
-                self.emit(obj.event, obj.data);
-              }
+              debug("events: " + JSON.stringify(events));
+
+              events.forEach(function(event) {
+                debug("binding event for " + event.replace("realtime:", ""));
+                Dubtrack.Events.bind(event, function (data) {
+                  console.log("DubtrackAPI: " + JSON.stringify({
+                    event: event.replace("realtime:", ""),
+                    data: data
+                  }));
+                });
+              });
+
+            }, function() {
+
+            }, {
+              userPermissions: self.userPermissions
             });
+          }, 3000);
 
+          page.set('onConsoleMessage', function(msg) {
+            if(!msg.match(/^The page at/)) {
+              //console.log("console message: ", msg);
+            }
+            var re = new RegExp("^DubtrackAPI: (.+)");
+            if(msg.match(re)) {
+              var obj = JSON.parse(RegExp.$1);
+              self.emit(obj.event, obj.data);
+            }
           });
+
 
         });
 
