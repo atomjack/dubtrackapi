@@ -68,8 +68,9 @@
         };
         self.ph.addCookie(cookie);
         page.set('onError', function(msg, trace) {
-          console.log("Page Error: ,", msg);
-          console.log("Error Trace: ", trace);
+          //console.log("Page Error: ,", msg);
+          //console.log("Error Trace: ", trace);
+          self.emit('error', msg, trace);
         });
         console.log("opening page");
 
@@ -181,11 +182,7 @@
 
     DubtrackAPI.prototype.createPage = function(room, callback) {
       var self = this;
-      var phantomOptions = {
-        port: self.phantomPort,
-        'ignore-ssl-errors': 'yes'
-      };
-      phantom.create("--ssl-protocol=TLSv1", phantomOptions, function(ph) {
+      phantom.create(function(ph) {
         ph.get('version', function(result) {
           if(result.major < 2) {
             var version = result.major + "." + result.minor + "." + result.patch;
