@@ -13,11 +13,19 @@
 
     function DubtrackAPI(creds) {
       this.creds = creds;
+      this.authCookie = typeof creds === 'string' ? creds : false;
       this.page = false;
       this.pageReady = false;
       this.loggedin = false;
       this.cookies = {};
       this.ph = false;
+
+      this.status = {
+        'INVALID_LOGIN': 0,
+        'LOGGED_IN': 1
+      };
+      this.loginChecks = 0;
+      this.maxLoginChecks = 10;
 
       this.userPermissions = {
         USER: 0,
@@ -29,17 +37,94 @@
       this.phantomPort = 12300; // default phantom port
     };
 
-    DubtrackAPI.prototype.connect = function(room) {
-      console.log("connecting to " + room);
+    DubtrackAPI.setPhantomPort = function(port) {
+      this.phantomPort = port;
+    };
+
+    DubtrackAPI.prototype.login = function() {
       var self = this;
-      if(this.ph === false) {
-        // Need to create page
-        this.createPage(room, function(ph) {
-          self.ph = ph;
-          self.connect(room);
+      this.createPage(function(ph) {
+        self.ph = ph;
+        self.ph.createPage(function (page) {
+          page.set('viewportSize', {
+            width: 1280,
+            height: 720
+          });
+          self.page = page;
+          page.open("https://www.dubtrack.fm/login", function(status) {
+            setTimeout(function() {
+              page.evaluate(function(creds) {
+                $('#login-input-username').val(creds.username);
+                $('#login-input-password').val(creds.password);
+                $('#login-window form').submit();
+              }, function() {
+                self.checkLogin();
+              }, self.creds);
+            }, 3000);
+          });
         });
+      });
+    };
+
+    DubtrackAPI.prototype.checkLogin = function() {
+      var self = this;
+      setTimeout(function() {
+        self.page.evaluate(function(selfstatus) {
+          var status = {};
+          if($('.err-message').is(':visible')) {
+            status.state = selfstatus.INVALID_LOGIN;
+          } else if($('#login-model-window').length === 0) {
+            status.state = selfstatus.LOGGED_IN;
+          }
+          return status;
+        }, function(status) {
+          if(status.state === self.status.INVALID_LOGIN) {
+            console.log("Invalid login.");
+            self.ph.exit();
+          } else if(status.state === self.status.LOGGED_IN) {
+            self.page.getCookies(function(cookies) {
+              var foundCookie = false;
+              for(var i in cookies) {
+                var cookie = cookies[i];
+                if(cookie.name == 'connect.sid') {
+                  foundCookie = cookie.value;
+                }
+              }
+              if(foundCookie !== false) {
+                self.authCookie = foundCookie;
+                self.openPage('chillout-mixer');
+              } else {
+                console.log("Login failed for some reason.");
+                self.ph.exit();
+              }
+            });
+          } else {
+            self.loginChecks++;
+            if(self.loginChecks >= self.maxLoginChecks) {
+              console.log("Tried to login but was not successful. Sorry.");
+              self.ph.exit();
+            } else
+              self.checkLogin();
+          }
+        }, self.status);
+      }, 2000);
+    };
+
+    DubtrackAPI.prototype.connect = function(room) {
+      if(this.authCookie === false) {
+        this.login();
       } else {
-        this.openPage(room);
+        console.log("connecting to " + room);
+        var self = this;
+        if (this.ph === false) {
+          // Need to create page
+          this.createPage(function (ph) {
+            self.ph = ph;
+            self.connect(room);
+          });
+        } else {
+          this.openPage(room);
+        }
       }
     };
 
@@ -55,29 +140,26 @@
     DubtrackAPI.prototype.openPage = function(room) {
       var self = this;
 
-
       this.ph.createPage(function (page) {
         page.set('viewportSize', {
           width: 1280,
           height: 720
         });
-        var cookie = {
-          domain: '.dubtrack.fm',
-          name: 'connect.sid',
-          value: self.creds
-        };
-        self.ph.addCookie(cookie);
+        if(this.authCookie !== false) {
+          var cookie = {
+            domain: '.dubtrack.fm',
+            name: 'connect.sid',
+            value: self.authCookie
+          };
+          self.ph.addCookie(cookie);
+        }
         page.set('onError', function(msg, trace) {
-          //console.log("Page Error: ,", msg);
-          //console.log("Error Trace: ", trace);
           self.emit('error', msg, trace);
         });
-        console.log("opening page");
 
         page.open('https://www.dubtrack.fm/join/' + room, function(status) {
           self.page = page;
 
-          console.log("status: ", status);
           setTimeout(function() {
             page.evaluate(function(data) {
               function debug(msg) {
@@ -180,7 +262,7 @@
       });
     };
 
-    DubtrackAPI.prototype.createPage = function(room, callback) {
+    DubtrackAPI.prototype.createPage = function(callback) {
       var self = this;
       phantom.create(function(ph) {
         ph.get('version', function(result) {

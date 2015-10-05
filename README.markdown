@@ -7,8 +7,9 @@ This API is just beginning, and since the Dubtrack Javascript API is not documen
 ```
 npm install phantomjs
 ```
+If you created the Dubtrack account for the bot by connecting through Facebook or Twitter, you will have to first login as that user, and view the cookies in your browser and get the value of the "connect.sid" cookie. It will look something like `s%Bp46VM86r0gns4w2krwtQ86JiROoNorcapnylGMTdG9qvs3rfs9YOCacdhFl2MlRCr4e8uM8LuP905RP`.
 
-First, you must log in to Dubtrack with the account you want the bot to login as. View the cookies in your browser and get the value of the "connect.sid" cookie. It will look something like `s%Bp46VM86r0gns4w2krwtQ86JiROoNorcapnylGMTdG9qvs3rfs9YOCacdhFl2MlRCr4e8uM8LuP905RP`.
+Otherwise, you can use the Username and Password if you created your account with one. There is currently no way to get a password for an account created through Facebook or Twitter.
 
 Then, create a .js file similar to below, and run it with node:
 ```
@@ -17,7 +18,15 @@ node bot.js
 
 ```
 var DubtrackAPI = require('./dubtrackapi');
+
+// For the cookie route, just set creds to the cookie value
 var creds = '...'; // Put the value of the connect.sid cookie here
+
+// For username and password
+creds = {
+  username: '...',
+  password: '...'
+};
 
 var bot = new DubtrackAPI(creds);
 
@@ -38,5 +47,9 @@ bot.on('chat-message', function(data) {
 
 bot.on('djAdvance', function(data) {
   console.log("new song playing: ", data);
+});
+
+bot.on('error', function(msg, trace) {
+  console.log("Got an error from the virtual browser: ", msg, trace);
 });
 ```
