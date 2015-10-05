@@ -160,13 +160,20 @@
         page.open('https://www.dubtrack.fm/join/' + room, function(status) {
           self.page = page;
 
-          setTimeout(function() {
-            page.evaluate(function(data) {
-              function debug(msg) {
-                console.log("DubtrackAPI: " + JSON.stringify({
-                  event: 'debug',
-                  data: msg
-                }));
+          page.evaluate(function(data) {
+            function debug(msg) {
+              console.log("DubtrackAPI: " + JSON.stringify({
+                event: 'debug',
+                data: msg
+              }));
+            }
+
+            var interval = setInterval(function() {
+
+              if($('ul.avatar-list li').length === 0) {
+                return;
+              } else {
+                clearInterval(interval);
               }
 
               var currentTrack = $('li.infoContainer span.currentSong').html();
@@ -175,7 +182,7 @@
               var users = {};
               $('ul.avatar-list li').each(function() {
                 var user = {};
-                user.username = $(this).find('img').attr('alt');
+                user.username = $(this).find('p.username').html();
                 if($(this).hasClass('admin'))
                   user.permission = data.userPermissions.CREATOR;
                 else if($(this).hasClass('creator'))
@@ -236,13 +243,13 @@
                   }));
                 });
               });
+            }, 2000);
 
-            }, function() {
+          }, function() {
 
-            }, {
-              userPermissions: self.userPermissions
-            });
-          }, 3000);
+          }, {
+            userPermissions: self.userPermissions
+          });
 
           page.set('onConsoleMessage', function(msg) {
             if(!msg.match(/^The page at/)) {
