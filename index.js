@@ -7,6 +7,7 @@
   var net = require('net');
   var util = require('util');
 
+  process.on('uncaughtException', function(err) {  });
 
   DubtrackAPI = (function(_super) {
     __extends(DubtrackAPI, _super);
@@ -19,6 +20,7 @@
       this.loggedin = false;
       this.cookies = {};
       this.ph = false;
+      this.room = false;
 
       this.status = {
         'INVALID_LOGIN': 0,
@@ -92,7 +94,7 @@
               }
               if(foundCookie !== false) {
                 self.authCookie = foundCookie;
-                self.openPage('chillout-mixer');
+                self.openPage(self.room);
               } else {
                 console.log("Login failed for some reason.");
                 self.ph.exit();
@@ -111,10 +113,10 @@
     };
 
     DubtrackAPI.prototype.connect = function(room) {
+      this.room = room;
       if(this.authCookie === false) {
         this.login();
       } else {
-        console.log("connecting to " + room);
         var self = this;
         if (this.ph === false) {
           // Need to create page
@@ -123,6 +125,7 @@
             self.connect(room);
           });
         } else {
+          console.log("connecting to " + room);
           this.openPage(room);
         }
       }
@@ -259,6 +262,8 @@
             if(msg.match(re)) {
               var obj = JSON.parse(RegExp.$1);
               self.emit(obj.event, obj.data);
+              if(obj.event === 'ready')
+                self.pageReady = true;
             }
           });
 
@@ -288,6 +293,8 @@
 
     DubtrackAPI.prototype.getEvents = function(callback) {
       var self = this;
+      if(self.pageReady === false)
+        return;
       this.page.evaluate(function() {
         var events = [];
         for(var event in Dubtrack.Events._events) {
