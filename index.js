@@ -6,6 +6,7 @@
   var http = require('http');
   var net = require('net');
   var util = require('util');
+  var request = require('request');
 
   process.on('uncaughtException', function(err) {  });
 
@@ -209,25 +210,6 @@
                 }
               }));
 
-              // Monitor the current song playing, and emit an event when it changes
-              setInterval(function() {
-                var newTrack = $('li.infoContainer span.currentSong').html();
-                if(newTrack !== currentTrack) {
-                  currentTrack = newTrack;
-                  var username = $('li.imgEl img').attr('alt');
-                  var foo = currentTrack.split(" - ");
-                  var obj = {
-                    event: 'djAdvance',
-                    data: {
-                      username: username,
-                      artist: foo[0],
-                      track: foo[1]
-                    }
-                  };
-                  console.log("DubtrackAPI: " + JSON.stringify(obj));
-                }
-              }, 5000);
-
               //Emit all Dubtrack JS API events
               var events = [];
               for(var event in Dubtrack.Events._events) {
@@ -261,9 +243,9 @@
             var re = new RegExp("^DubtrackAPI: (.+)");
             if(msg.match(re)) {
               var obj = JSON.parse(RegExp.$1);
-              self.emit(obj.event, obj.data);
               if(obj.event === 'ready')
                 self.pageReady = true;
+              self.emit(obj.event, obj.data);
             }
           });
 
@@ -308,6 +290,23 @@
           callback(events);
         }
       });
+    };
+
+    DubtrackAPI.prototype.getUsers = function(callback) {
+      if(this.pageReady === false)
+        return;
+      request.get("https://api.dubtrack.fm/room/" + this.room,
+        function(error, response, body) {
+          var room = JSON.parse(body);
+          request.get("https://api.dubtrack.fm/room/" + room.data._id + "/users",
+            function(error, response, body) {
+              var usersObj = JSON.parse(body);
+              var users = usersObj.data;
+              if(typeof callback === 'function') {
+                callback(users);
+              }
+            });
+        });
     };
 
 
