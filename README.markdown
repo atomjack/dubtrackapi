@@ -45,7 +45,7 @@ bot.on('chat-message', function(data) {
   console.log("got chat: ", data);
 });
 
-bot.on('djAdvance', function(data) {
+bot.on('room_playlist-update', function(data) {
   console.log("new song playing: ", data);
 });
 
